@@ -76,7 +76,7 @@ export default function TasksPage() {
     const fetchCommunityTasks = async () => {
       try {
         const res = await getAvailableCommunityTasks();
-        setCommunityTasks(res.items);
+        setCommunityTasks(res.items ?? []);
       } catch (err) {
         console.error('Failed to fetch community tasks', err);
       } finally {

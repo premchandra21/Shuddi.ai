@@ -178,9 +178,15 @@ export default function IndividualTaskPage() {
     }
   };
 
-  const handleRetry = () => {
-    // Rejected -> user re-enters the submission form for another attempt.
-    setStatusData({ status: 'STARTED' });
+  const handleRetry = async () => {
+    if (!taskId) return;
+    try {
+      const res = await startTask(taskId);
+      setStatusData({ status: res.status });
+    } catch (err) {
+      console.error('Failed to restart task', err);
+      taskToast.error('Could not start a new attempt. Please try again.');
+    }
   };
 
   const handleSubmitProof = async (data: {
@@ -371,9 +377,9 @@ export default function IndividualTaskPage() {
             )}
 
             {statusData.status === 'SUBMITTED' ||
-            statusData.status === 'UNDER_VERIFICATION' ||
-            statusData.status === 'VERIFIED' ||
-            statusData.status === 'REWARD_PROCESSING' ? (
+              statusData.status === 'UNDER_VERIFICATION' ||
+              statusData.status === 'VERIFIED' ||
+              statusData.status === 'REWARD_PROCESSING' ? (
               <Box textAlign="center" py={2}>
                 <CircularProgress size={32} sx={{ color: GREEN_PRIMARY, mb: 2 }} />
                 <Typography color="text.secondary">{PENDING_COPY[statusData.status]}</Typography>

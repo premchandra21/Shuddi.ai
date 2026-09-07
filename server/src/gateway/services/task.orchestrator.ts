@@ -25,28 +25,19 @@ export const startTask = async (taskId: string, userId: string) => {
 };
 
 export const submitTaskEvidence = async (
-  taskId: string, //this is model task id
+  taskId: string,
   userId: string,
-  data: {
-    evidenceUrls?: string[];
-    textResponse?: string;
-    mcqAnswer?: string;
-  }
+  data: { evidenceUrls?: string[]; textResponse?: string; mcqAnswer?: string }
 ) => {
-  // 1. Save submission
   const submission =
     await IndividualTaskService.submitEvidence(taskId, userId, data);
 
-  // 2. Resolve active TaskScore and update it to SUBMITTED
-  const activeTaskScore = await prisma.taskScore.findFirst({
-    where: {
-      userId,
-      taskId,
-      status: TaskCompletionStatus.STARTED,
-    },
+  // ✅ resolve the TaskScore that actually belongs to THIS submission
+  const activeTaskScore = await prisma.taskScore.findUnique({
+    where: { submissionId: submission.id },
   });
 
-  if (!activeTaskScore) {
+  if (!activeTaskScore || activeTaskScore.status !== TaskCompletionStatus.STARTED) {
     throw new ApiError(404, "Active task score not found");
   }
 
@@ -55,12 +46,10 @@ export const submitTaskEvidence = async (
     data: { status: TaskCompletionStatus.SUBMITTED },
   });
 
-  // 3. Phase-1 auto verification
   const finalTaskScore = await processVerification(taskScore.id);
 
   return {
     submissionId: submission.id,
-    status: finalTaskScore.status, // COMPLETED / REJECTED
+    status: finalTaskScore.status,
   };
 };
-

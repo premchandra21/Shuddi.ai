@@ -25,7 +25,7 @@ export const getAvailableTasks = async (_req: Request, res: Response) => {
     const data = await CommunityTaskOrchestrator.getAvailableCommunityTasks();
 
     if (!data.items.length) {
-      return res.json({ message: "No available tasks" });
+      return res.json({ items: [] });   // keep the same shape, just empty
     }
 
     return res.json(data);

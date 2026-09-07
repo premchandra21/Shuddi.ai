@@ -134,7 +134,7 @@ export const getTaskStatus = async (taskId: string, userId: string) => {
     const completedToday = await prisma.taskScore.findFirst({
       where: {
         userId,
-        taskId: individualTask.taskId, // NOTE: this is main taskId (not individualTask.id)
+        taskId: individualTask.taskId,
         status: "COMPLETED",
         createdAt: {
           gte: startOfToday(),
@@ -143,19 +143,41 @@ export const getTaskStatus = async (taskId: string, userId: string) => {
     });
 
     if (completedToday) {
-      return { status: "COMPLETED" }; // 🔥 key
+      return { status: "COMPLETED" };
     }
   }
 
-  const existing = await prisma.taskSubmission.findFirst({
+  // ✅ track the submission through its whole in-flight lifecycle,
+  // not just the moment right after "Start Task"
+
+  const latestScore = await prisma.taskScore.findFirst({
     where: {
       userId,
-      taskId: individualTask.id,
-      status: "STARTED",
+      taskId: individualTask.taskId,
     },
+    include: { submission: true },
+    orderBy: { createdAt: "desc" },
   });
 
-  return { status: existing?.status || "NOT_STARTED" };
+  if (!latestScore) {
+    return { status: "NOT_STARTED" };
+  }
+
+  return {
+    status: latestScore.status,
+    rejectionReason: latestScore.submission?.rejectionReason ?? null,
+  };
+
+  // const existing = await prisma.taskSubmission.findFirst({
+  //   where: {
+  //     userId,
+  //     taskId: individualTask.id,
+  //     status: { in: ["STARTED", "SUBMITTED", "UNDER_VERIFICATION"] },
+  //   },
+  //   orderBy: { startedAt: "desc" },
+  // });
+
+  // return { status: existing?.status || "NOT_STARTED" };
 }
 
 
@@ -193,7 +215,7 @@ export const createSubmission = async (taskId: string, userId: string) => {
       where: {
         userId,
         taskId: individualTask.id,
-        status: "STARTED",
+        status: { in: ["STARTED", "SUBMITTED", "UNDER_VERIFICATION"] },
       },
     });
 
