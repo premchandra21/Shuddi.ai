@@ -37,10 +37,15 @@ const generateTaskPrompt = async (
     const rubric = await generateRubric(title, description, toPythonType(verificationType));
     return rubric.criteria_text;
   } catch (err: any) {
-    console.warn(
-      `⚠️  Could not generate verification prompt for "${title}" -- is verification-api running at ${process.env.VERIFICATION_API_URL || 'http://localhost:8000'
-      }? (${err?.message ?? err})`
-    );
+    // axios throws on non-2xx, but err.message is just "Request failed with
+    // status code 502" -- the actual reason (bad/expired GOOGLE_API_KEY, no
+    // quota, model not enabled, etc.) is in the response body's `detail`
+    // field, set by verification-api's `except Exception as e: raise
+    // HTTPException(..., detail=f"Rubric generation failed: {e}")`. Surface
+    // that instead of just the generic HTTP status message, or every 5xx
+    // looks like "verification-api isn't running" even when it is.
+    const detail = err?.response?.data?.detail ?? err?.message ?? err;
+    console.warn(`⚠️  Could not generate verification prompt for "${title}": ${detail}`);
     return undefined;
   }
 };

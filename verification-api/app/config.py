@@ -4,7 +4,7 @@ import os
 # loaded by python-dotenv (see main.py) before starting the app.
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 QWEN_MODEL_NAME = os.environ.get("QWEN_MODEL_NAME", "Qwen/Qwen2.5-VL-3B-Instruct")
-GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL_NAME", "gemini-2.5-flash")
+GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL_NAME", "gemini-3.6-flash")
 
 # --- Qwen -> Gemini bypass switch ---
 # When true, the IMAGE_TEXT / BEFORE_AFTER verification chains call Gemini
