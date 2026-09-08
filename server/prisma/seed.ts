@@ -16,8 +16,34 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import { hashPassword } from '../src/core-backend/auth/utils/helpers';
+import { generateRubric, toPythonType } from '../src/gateway/services/verification-client.service';
 
 dotenv.config();
+
+// Same rubric-generation step admin.service.ts runs when an NGO/admin creates
+// an individual task from the dashboard (verification-api's /rubric/generate,
+// backed by Gemini). The seed was creating IndividualTask rows directly via
+// Prisma and skipping this call entirely, which is why `prompt` was always
+// null for seeded tasks and verification had nothing to check submissions
+// against. Requires verification-api to be running (see VERIFICATION_API_URL,
+// defaults to http://localhost:8000) -- if it isn't, we log a warning and
+// leave prompt undefined rather than failing the whole seed.
+const generateTaskPrompt = async (
+  title: string,
+  description: string,
+  verificationType: Exclude<TaskVerificationType, 'MCQ'>
+): Promise<string | undefined> => {
+  try {
+    const rubric = await generateRubric(title, description, toPythonType(verificationType));
+    return rubric.criteria_text;
+  } catch (err: any) {
+    console.warn(
+      `⚠️  Could not generate verification prompt for "${title}" -- is verification-api running at ${process.env.VERIFICATION_API_URL || 'http://localhost:8000'
+      }? (${err?.message ?? err})`
+    );
+    return undefined;
+  }
+};
 
 const connectionString = `${process.env.DATABASE_URL}`;
 const pool = new Pool({ connectionString });
@@ -490,6 +516,12 @@ async function main() {
   // ----------------------------
   // INDIVIDUAL TASK 1 (One-time)
   // ----------------------------
+  const task1Prompt = await generateTaskPrompt(
+    "Plant a Tree",
+    "Plant a tree in your locality and upload proof.",
+    TaskVerificationType.IMAGE
+  );
+
   const task1 = await prisma.task.create({
     data: {
       type: TaskType.INDIVIDUAL,
@@ -508,6 +540,7 @@ async function main() {
           },
           educationalLink: "https://en.wikipedia.org/wiki/Tree_planting",
           factContent: "Planting trees helps absorb CO2 and improves air quality.",
+          prompt: task1Prompt,
         },
       },
     },
@@ -565,6 +598,12 @@ async function main() {
   // ----------------------------
   // INDIVIDUAL TASK 3 (Hard + 15 day cooldown)
   // ----------------------------
+  const task3Prompt = await generateTaskPrompt(
+    "Community Clean Drive",
+    "Organize or participate in a local clean-up drive.",
+    TaskVerificationType.IMAGE
+  );
+
   const task3 = await prisma.task.create({
     data: {
       type: TaskType.INDIVIDUAL,
@@ -582,6 +621,7 @@ async function main() {
             description: "Upload before and after images of the cleaned area",
           },
           factContent: "Clean environments reduce disease spread.",
+          prompt: task3Prompt,
         },
       },
     },
@@ -590,6 +630,12 @@ async function main() {
   // ----------------------------
   // DAILY TASK 1
   // ----------------------------
+  const task4Prompt = await generateTaskPrompt(
+    "Drink 2L Water",
+    "Stay hydrated and track your daily water intake.",
+    TaskVerificationType.TEXT
+  );
+
   const task4 = await prisma.task.create({
     data: {
       type: TaskType.INDIVIDUAL,
@@ -607,6 +653,7 @@ async function main() {
             description: "Enter how much water you drank today",
           },
           factContent: "Proper hydration improves brain function and energy levels.",
+          prompt: task4Prompt,
         },
       },
     },
@@ -615,6 +662,12 @@ async function main() {
   // ----------------------------
   // DAILY TASK 2
   // ----------------------------
+  const task5Prompt = await generateTaskPrompt(
+    "Walk 5,000 Steps",
+    "Complete at least 5,000 steps today.",
+    TaskVerificationType.TEXT
+  );
+
   const task5 = await prisma.task.create({
     data: {
       type: TaskType.INDIVIDUAL,
@@ -632,6 +685,7 @@ async function main() {
             description: "Upload step count screenshot or enter manually",
           },
           factContent: "Walking daily reduces risk of heart disease.",
+          prompt: task5Prompt,
         },
       },
     },
@@ -640,6 +694,12 @@ async function main() {
   // ----------------------------
   // DAILY TASK 3
   // ----------------------------
+  const task6Prompt = await generateTaskPrompt(
+    "Avoid Single-use Plastic",
+    "Avoid using plastic items for a day.",
+    TaskVerificationType.TEXT
+  );
+
   const task6 = await prisma.task.create({
     data: {
       type: TaskType.INDIVIDUAL,
@@ -657,6 +717,7 @@ async function main() {
             description: "Describe how you avoided plastic today",
           },
           factContent: "Plastic waste takes hundreds of years to decompose.",
+          prompt: task6Prompt,
         },
       },
     },

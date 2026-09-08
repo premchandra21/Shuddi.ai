@@ -43,7 +43,7 @@ export const verifySubmission = async (payload: {
     user_text?: string;
     image_before?: string;
     image_after?: string;
-}): Promise<{ confidence_score: number }> => {
+}): Promise<{ confidence_score: number; reasoning: string }> => {
     const { data } = await axios.post(`${VERIFICATION_API_URL}/verify`, payload);
     return data;
 };

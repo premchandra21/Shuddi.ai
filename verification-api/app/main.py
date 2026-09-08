@@ -36,9 +36,10 @@ async def lifespan(app: FastAPI):
         registry["processor"] = AutoProcessor.from_pretrained(QWEN_MODEL_NAME)
         print("Model device:", next(registry["model"].parameters()).device)
 
-    print("Loading sentence-transformer embeddings...")
-    from langchain_huggingface import HuggingFaceEmbeddings
-    registry["embeddings"] = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    # TEXT_ONLY verification now goes through Gemini (structured output) instead
+    # of sentence-transformer cosine similarity, so the embeddings model is no
+    # longer needed at all -- nothing loads it anymore.
+    registry["embeddings"] = None
 
     print("Building verification chains...")
     registry["verification_router"] = build_verification_router()

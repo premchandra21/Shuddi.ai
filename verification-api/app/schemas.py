@@ -48,3 +48,25 @@ class VerifyRequest(BaseModel):
 
 class VerifyResponse(BaseModel):
     confidence_score: int = Field(ge=0, le=100)
+    reasoning: str = Field(
+        default="",
+        description="Human-readable explanation of the score, shown to the user when a submission is rejected.",
+    )
+
+
+# ---------- Internal: shared LLM verification output shape ----------
+# Used for the structured-output call to Gemini (TEXT_ONLY path) and as the
+# target shape the IMAGE_TEXT / BEFORE_AFTER prompts are asked to return as
+# JSON. Kept separate from VerifyResponse so the API's public field name
+# (confidence_score) doesn't have to match the LLM's output field (score).
+
+class VerificationResult(BaseModel):
+    score: int = Field(ge=0, le=100, description="0-100 score for how well the evidence satisfies the rubric")
+    reasoning: str = Field(
+        description=(
+            "Specific, concrete explanation for the score, written in plain language for the "
+            "end user. If the score is low, state exactly what was missing or didn't match the "
+            "rubric. If the score is high, state what the submission got right. Never just "
+            "restate the score itself as the reasoning."
+        )
+    )

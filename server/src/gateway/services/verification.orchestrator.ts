@@ -51,7 +51,7 @@ export const processVerification = async (taskScoreId: string) => {
     throw new ApiError(400, "Both before and after images are required for BEFORE_AFTER verification");
   }
 
-  const { confidence_score } = await verifySubmission(verifyPayload);
+  const { confidence_score, reasoning } = await verifySubmission(verifyPayload);
 
   // Three-way split:
   //  - >= PASS_THRESHOLD        -> auto-verified, straight to reward flow
@@ -99,7 +99,15 @@ export const processVerification = async (taskScoreId: string) => {
       data: {
         status: SubmissionStatus.REJECTED,
         verifiedAt: new Date(),
-        rejectionReason: `Confidence score ${confidence_score} is below the acceptable minimum of ${AUTO_REJECT_THRESHOLD}`,
+        // Real, model-generated reasoning instead of a bare confidence-score
+        // string -- this is what gets shown to the user on the rejected
+        // submission screen (see TaskSubmission.rejectionReason usage in
+        // getTaskDetails / getTaskStatus and SubmissionResultState.tsx on
+        // the client). We still persist it on the submission row rather than
+        // returning it only in this response, since the frontend re-fetches
+        // status/details rather than reading the processVerification result
+        // directly -- if it isn't stored here it never reaches the user.
+        rejectionReason: reasoning || `Confidence score ${confidence_score} is below the acceptable minimum of ${AUTO_REJECT_THRESHOLD}`,
       },
     });
 
