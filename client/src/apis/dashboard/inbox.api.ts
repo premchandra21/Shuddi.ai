@@ -3,7 +3,7 @@ import axios from "axios"
 
 // Creating a Axios instance.
 export const api = axios.create({
-  baseURL: "`${import.meta.env.VITE_SERVER_LINK}/api/ngo`",
+  baseURL: `${import.meta.env.VITE_SERVER_LINK}/api/ngo`,
   withCredentials: true,
   headers: { "Content-Type": "application/json" }
 })
