@@ -160,6 +160,8 @@ const InviteMemberDialog = ({
 
                 await loadInvitations();
 
+                onSuccess();
+
             } catch (error: any) {
 
                 toast.error(

@@ -8,7 +8,6 @@ import {
   ThemeProvider,
   Typography,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
 import { theme } from '../theme/theme';
@@ -45,7 +44,7 @@ import type {
 
 // ─── Dashboard ──────────────────────────────────────────────────────────────────
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [overview, setOverview]     = useState<OverviewData | null>(null);
   const [impact, setImpact]         = useState<ImpactData | null>(null);

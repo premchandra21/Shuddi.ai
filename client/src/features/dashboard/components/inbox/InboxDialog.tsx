@@ -7,7 +7,6 @@ import {
     Typography,
     List,
     ListItemButton,
-    ListItemText,
     Divider,
     Box,
     CircularProgress,

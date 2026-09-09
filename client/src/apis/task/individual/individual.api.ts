@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Task, TaskDetails, TaskListItem, SubmissionStatus, SubmitTaskResponse} from "../../../utils/individualTask.type";
+import type { Task, TaskDetails, SubmissionStatus, SubmitTaskResponse} from "../../../utils/individualTask.type";
 
 export const api = axios.create({
     baseURL: `${import.meta.env.VITE_SERVER_LINK}/api`,

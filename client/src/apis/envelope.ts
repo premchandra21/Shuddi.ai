@@ -1,4 +1,4 @@
-import { z, type ZodType } from "zod";
+import { type ZodType } from "zod";
 
 // Matches the { success, data } shape confirmed on the tasks/details endpoints.
 export function unwrapEnvelope<T>(schema: ZodType<T>, raw: unknown): T {
