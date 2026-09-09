@@ -4,7 +4,6 @@ import mimetypes
 import re
 
 import requests
-import torch
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableLambda, RunnableBranch
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -24,13 +23,14 @@ class QwenVLRunnable(Runnable):
     integer (see build_image_text_input / build_before_after_input below), so
     max_tokens needs enough headroom for a sentence or two of reasoning.
 
-    NOTE: the qwen_vl_utils import is done lazily inside invoke() (rather
-    than at module level) so this file -- and the whole app -- can still be
-    imported and run in Gemini-only mode on a host where qwen-vl-utils /
-    transformers / bitsandbytes aren't installed at all.
+    NOTE: the torch and qwen_vl_utils imports are done lazily inside invoke()
+    (rather than at module level) so this file -- and the whole app -- can
+    still be imported and run in Gemini-only mode on a host where torch /
+    qwen-vl-utils / transformers / bitsandbytes aren't installed at all.
     """
 
     def invoke(self, input: dict, config=None):
+        import torch
         from qwen_vl_utils import process_vision_info
 
         model = registry["model"]

@@ -31,7 +31,7 @@ api.interceptors.response.use(
 
 export const getMyInvitations = async () => {
     const response = await api.get("/invitations/me")
-    return response.data.data
+    return response.data?.data ?? []
 }
 
 export const acceptInvitation =

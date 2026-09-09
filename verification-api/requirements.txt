@@ -1,11 +1,5 @@
-# fastapi
-# uvicorn[standard]
-# python-dotenv
-# pydantic
-# langchain
-# langchain-core
-# langchain-huggingface
-# langchain-google-genai
+# --- Qwen-only deps (uncomment these + set USE_GEMINI_VERIFICATION=false to
+# switch back to the local Qwen2.5-VL model; needs a GPU host) ---
 # transformers
 # accelerate
 # bitsandbytes
@@ -22,6 +16,4 @@ langchain
 langchain-core
 langchain-huggingface
 langchain-google-genai
-sentence-transformers
-torch
 requests
