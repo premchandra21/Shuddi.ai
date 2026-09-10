@@ -28,14 +28,26 @@ export const toPythonType = (
 const RETRY_DELAYS_MS = [0, 3000, 8000, 15000, 20000];
 const REQUEST_TIMEOUT_MS = 20000;
 
+// Errors that mean "nothing is there at all" — retrying wastes ~46s per
+// call for no benefit. Distinct from a slow/waking service, which shows up
+// as a timeout or a 502/503/504 instead and IS worth retrying.
+const NOT_RUNNING_CODES = new Set([
+  "ECONNREFUSED", // nothing listening — e.g. verification-api not started locally/in seed
+  "ENOTFOUND",    // DNS lookup failed — bad VERIFICATION_API_URL or no network
+]);
+
 const isRetryable = (err: unknown): boolean => {
   if (!axios.isAxiosError(err)) return false;
-  // No response at all (timeout, ECONNREFUSED) or a 502/503/504 from the
-  // platform's proxy — both are consistent with a cold/waking instance.
+
+  if (err.code && NOT_RUNNING_CODES.has(err.code)) return false;
+
+  // No response but not one of the above (timeout/ECONNABORTED, etc.) —
+  // consistent with a slow-to-wake Render instance.
   if (!err.response) return true;
+
+  // 502/503/504 from the platform's own proxy — also consistent with cold start.
   return [502, 503, 504].includes(err.response.status);
 };
-
 async function postWithRetry<T>(url: string, payload: unknown): Promise<T> {
   let lastErr: unknown;
   for (const delay of RETRY_DELAYS_MS) {
