@@ -46,10 +46,26 @@ export const submitTaskEvidence = async (
     data: { status: TaskCompletionStatus.SUBMITTED },
   });
 
-  const finalTaskScore = await processVerification(taskScore.id);
+  try {
+    const finalTaskScore = await processVerification(taskScore.id);
 
-  return {
-    submissionId: submission.id,
-    status: finalTaskScore.status,
-  };
+    return {
+      submissionId: submission.id,
+      status: finalTaskScore.status,
+    };
+  } catch (err) {
+    // Verification failed even after retries (or a genuine outage). Don't
+    // leave the taskScore stuck at SUBMITTED — that permanently blocks
+    // resubmission, since the STARTED check above would fail forever.
+    // Roll it back so the user can retry the submission.
+    await prisma.taskScore.update({
+      where: { id: taskScore.id },
+      data: { status: TaskCompletionStatus.STARTED },
+    });
+
+    throw new ApiError(
+      503,
+      "Verification service is temporarily unavailable. Please try submitting again in a moment."
+    );
+  }
 };
